@@ -1,5 +1,6 @@
 import { Telegraf, Context } from "telegraf";
-import { parseReminderText } from "../ai/nlp";
+import { processMessage } from "../ai/agent";
+import { messageService } from "../services/messageService";
 import { taskService } from "../services/taskService";
 import { formatTaskInline } from "../utils/format";
 import { getTimeZone } from "../utils/time";
@@ -10,7 +11,7 @@ export function registerAddCommand(bot: Telegraf) {
   bot.command("add", async (ctx) => {
     const text = ctx.message.text.split(" ").slice(1).join(" ").trim();
     if (!text) {
-      await replyHtml(ctx, "Usage: <b>/add remind me tomorrow at 8am to study marketing</b>");
+      await replyHtml(ctx, "Dime qué quieres recordar 😊\n\nEjemplo: <b>/add mañana a las 8am estudiar marketing</b>");
       return;
     }
     await handleAddText(ctx, text);
@@ -18,36 +19,54 @@ export function registerAddCommand(bot: Telegraf) {
 }
 
 export async function handleAddText(ctx: Context, text: string) {
+  const chatId = getChatId(ctx);
+  const tz = getTimeZone();
+  const rememberReply = async (reply: string) => {
+    await replyHtml(ctx, reply);
+    await messageService.addMessage(chatId, "user", text);
+    await messageService.addMessage(chatId, "assistant", reply);
+    await messageService.pruneOldMessages(chatId);
+  };
+
   try {
-    const parsed = await parseReminderText(text);
-    if (!parsed || !parsed.title || !parsed.dueDate) {
-      await replyHtml(ctx, "I could not understand the reminder. Try adding a clearer date and time.");
-      return;
+    const pendingTasks = await taskService.listPending(chatId);
+    const chatHistory = await messageService.getRecentMessages(chatId);
+    const result = await processMessage(text, pendingTasks, chatHistory);
+
+    // If the agent detected add_task intent with valid data
+    if (result.intent === "add_task" && result.title && result.dueDate) {
+      const dueDate = new Date(result.dueDate);
+      if (Number.isNaN(dueDate.getTime())) {
+        await rememberReply(result.reply || "No pude entender la fecha 🤔 Intenta de nuevo.");
+        return;
+      }
+
+      const task = await taskService.create({
+        chatId,
+        title: result.title.trim(),
+        description: result.description ?? undefined,
+        dueDate,
+        priority: result.priority ?? undefined
+      });
+
+      const confirmation = [
+        result.reply,
+        "",
+        `📌 ${formatTaskInline(task, tz)}`
+      ].join("\n");
+
+      await rememberReply(confirmation);
+    } else {
+      // AI couldn't fully parse — reply with whatever it said
+      await rememberReply(
+        result.reply || "No pude entender el recordatorio 🤔 Intenta agregar una fecha y hora más clara."
+      );
     }
-
-    const dueDate = new Date(parsed.dueDate);
-    if (Number.isNaN(dueDate.getTime())) {
-      await replyHtml(ctx, "I could not parse the due date. Please try again.");
-      return;
-    }
-
-    const task = await taskService.create({
-      chatId: getChatId(ctx),
-      title: parsed.title.trim(),
-      description: parsed.description ?? undefined,
-      dueDate,
-      priority: parsed.priority ?? undefined
-    });
-
-    const tz = getTimeZone();
-    const confirmation = [
-      "✅ <b>Task added</b>",
-      formatTaskInline(task, tz)
-    ].join("\n");
-
-    await replyHtml(ctx, confirmation);
   } catch (err) {
     logger.error("Failed to add task", err);
-    await replyHtml(ctx, "Something went wrong while adding the task.");
+    const fallback = "Algo salió mal al agregar la tarea 😅";
+    await replyHtml(ctx, fallback);
+    await messageService.addMessage(chatId, "user", text).catch(() => undefined);
+    await messageService.addMessage(chatId, "assistant", fallback).catch(() => undefined);
   }
 }

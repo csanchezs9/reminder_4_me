@@ -4,20 +4,25 @@ import { replyHtml } from "../utils/telegram";
 export function registerHelpCommand(bot: Telegraf) {
   bot.command("help", async (ctx) => {
     const message = [
-      "<b>Commands</b>",
-      "/start - Start the bot",
-      "/help - Show this help",
-      "/tasks - List pending tasks",
-      "/add <text> - Add a reminder",
-      "/done <id> - Mark task as done",
-      "/delete <id> - Delete a task",
-      "/today - Tasks due today",
-      "/tomorrow - Tasks due tomorrow",
+      "🤖 <b>¿Qué puedo hacer?</b>",
       "",
-      "<b>Examples</b>",
-      "remind me tomorrow at 8am to study marketing",
-      "call Luisa in 2 hours",
-      "buy groceries tonight"
+      "Puedes hablarme de forma natural y yo entiendo. Pero si prefieres, también tengo comandos:",
+      "",
+      "<b>📝 Comandos</b>",
+      "/add <i>texto</i> - Agregar un recordatorio",
+      "/tasks - Ver tareas pendientes",
+      "/today - Tareas de hoy",
+      "/tomorrow - Tareas de mañana",
+      "/done <i>id</i> - Marcar como completada",
+      "/delete <i>id</i> - Eliminar una tarea",
+      "",
+      "<b>💬 Ejemplos naturales</b>",
+      '<i>"Recuérdame mañana a las 3pm llamar al doctor"</i>',
+      '<i>"Qué tengo para hoy?"</i>',
+      '<i>"Ya terminé lo del proyecto"</i>',
+      '<i>"Quita la tarea de estudiar"</i>',
+      "",
+      "¡Solo escríbeme y yo me encargo! 😊"
     ].join("\n");
 
     await replyHtml(ctx, message);

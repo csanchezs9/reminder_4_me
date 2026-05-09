@@ -42,7 +42,7 @@ Optional:
 - TIMEZONE (default: America/Bogota)
 - GROQ_MODEL (default: llama-3.3-70b-versatile)
 - DAILY_SUMMARY_TIME (default: 20:00)
-- LIST_SUMMARY_INTERVAL_HOURS (default: 4, set 0 to disable)
+- LIST_SUMMARY_INTERVAL_HOURS (default: 3, set 0 to disable)
 
 ## Usage Examples
 

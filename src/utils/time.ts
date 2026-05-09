@@ -39,12 +39,12 @@ export function getDailySummaryTime(): { hour: number; minute: number } {
 }
 
 export function getListSummaryIntervalHours(): number | null {
-  const raw = process.env.LIST_SUMMARY_INTERVAL_HOURS || "4";
+  const raw = process.env.LIST_SUMMARY_INTERVAL_HOURS || "3";
   const hours = Number.parseInt(raw, 10);
 
   if (Number.isNaN(hours) || hours < 0 || hours > 24) {
-    logger.warn("Invalid LIST_SUMMARY_INTERVAL_HOURS, falling back to 4");
-    return 4;
+    logger.warn("Invalid LIST_SUMMARY_INTERVAL_HOURS, falling back to 3");
+    return 3;
   }
 
   if (hours === 0) {

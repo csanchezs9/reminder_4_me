@@ -73,5 +73,18 @@ export const taskService = {
     }
     await prisma.task.delete({ where: { id } });
     return existing;
+  },
+
+  searchByKeyword: async (chatId: string, keyword: string): Promise<Task[]> => {
+    const lower = keyword.toLowerCase();
+    const all = await prisma.task.findMany({
+      where: { chatId, completed: false },
+      orderBy: { dueDate: "asc" }
+    });
+    return all.filter(
+      (t) =>
+        t.title.toLowerCase().includes(lower) ||
+        (t.description && t.description.toLowerCase().includes(lower))
+    );
   }
 };

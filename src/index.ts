@@ -9,11 +9,16 @@ import { prisma } from "./db/prisma";
 let bot: ReturnType<typeof createBot> | null = null;
 
 async function main() {
+  logger.info("Connecting to database...");
   await prisma.$connect();
+  logger.info("Database connected");
   bot = createBot();
-  await bot.launch();
+  logger.info("Launching Telegram bot...");
+  // In Telegraf 4.x, launch() starts polling and the returned promise
+  // only resolves when the bot stops. We fire-and-forget it.
+  bot.launch({ dropPendingUpdates: true });
   startScheduler(bot);
-  logger.info("Bot started");
+  logger.info("Bot started successfully ✅");
 }
 
 main().catch((err) => {
