@@ -41,6 +41,7 @@ Optional:
 - DATABASE_URL (default: file:./dev.db)
 - TIMEZONE (default: America/Bogota)
 - GROQ_MODEL (default: llama-3.3-70b-versatile)
+- GROQ_TRANSCRIPTION_MODEL (default: whisper-large-v3-turbo)
 - DAILY_SUMMARY_TIME (default: 20:00)
 - LIST_SUMMARY_INTERVAL_HOURS (default: 3, set 0 to disable)
 
